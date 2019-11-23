@@ -6,11 +6,11 @@ from os import system
 system("python3 -m pip install --user pyserial rospkg")
 system("python3 -m pip install --user --upgrade pyserial rospkg")
 
-from usb_can_analyzer.converter import Converter
+from usb_can_analyzer.sensorManager import SensorManager
 
 
 __all__ = [
-    "Converter"
+    "SensorManager"
 ]
 
 
