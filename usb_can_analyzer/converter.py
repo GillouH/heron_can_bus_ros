@@ -22,18 +22,17 @@ class Converter:
     DATA, REMOTE = (0, 1)
     TYPE_MSG = (DATA, REMOTE)
 
-    FIRST_BYTE = b'\xAA'	# Constant use for the USB protocol with the converter USB/CAN.
+    FIRST_BYTE = b'\xaa'	# Constant use for the USB protocol with the converter USB/CAN.
     LAST_BYTE = b'\x55'		# Constant use for the USB protocol with the converter USB/CAN.
 
-    def __init__(self, port: str = "/dev/converter", baudrate: int = 1228800, idMsgType: int = STANDARD):
+    def __init__(self, port: str = "/dev/ttyUSB0", baudrate: int = 1228800, idMsgType: int = STANDARD):
         if idMsgType not in Converter.ID_MSG_TYPE_SIZE.keys():	# We check that the idMsgType is a suitable value.
             raise ValueError("Not a valid idMsgSize: " + str(idMsgType))
         self.idMsgType = idMsgType
-        self.comUSB = Serial(port, baudrate)
-        #self.comUSB.close()
+        self.comUSB = Serial(port, baudrate, timeout=0)
 
     # WRITING PART
-    def sendMessage(self, msgType: int, serviceID: int, nodeID : int, payload : str) -> None:
+    def sendMessage(self, msgType: int, serviceID: int, nodeID: int, payload: str) -> None:
         msgID = self.createMsgID(serviceID, nodeID)
         frame = (
             self.FIRST_BYTE
@@ -50,7 +49,7 @@ class Converter:
             raise ValueError("idMsg too large: " + str(idMsg))
         payloadNbByte = getNbByte(payload)	# We check that payload is not too to large.
         if payloadNbByte > 0b1111:
-            raise ValueError("payload to large. It must contain at the most " + str(0b1111) + " bytes. payload: " + str(payload) + ", nb bytes: " + str(payloadNbByte))
+            raise ValueError("payload too large. It must contain at the most " + str(0b1111) + " bytes. payload: " + str(payload) + ", nb bytes: " + str(payloadNbByte))
         if typeFrame not in Converter.TYPE_MSG:		# We check that typeFrame is either DATA or REMOTE.
             raise ValueError("Not a valid type frame: " + str(typeFrame))
 
@@ -90,7 +89,7 @@ class Converter:
         configByte = int(self.comUSB.read().hex(), base=16)
         msgType = Converter.TYPE_MSG[int(format(configByte, 'b')[3])]
         lengthID = Converter.ID_MSG_TYPE_SIZE[int(format(configByte, 'b')[2])]
-        lengthPayload = int(format(configByte, 'x')[1], base=16)
+        lengthPayload = int(format(configByte, "x")[1], base=16)
         return msgType, lengthID, lengthPayload
 
     def getMsgID(self, lengthID: int) -> Tuple[int, int]:
@@ -112,7 +111,12 @@ class Converter:
 
 if __name__ == "__main__":
     try:
-        pass
+        converter = Converter("/dev/ttyUSB0")
+        while True:
+            converter.sendMessage(Converter.DATA, 0b1010, 0b111010, input())
+            #data = converter.readMessage()
+            #if type(data) != int:
+                #print(data)
     except KeyboardInterrupt:
         pass
     finally:
