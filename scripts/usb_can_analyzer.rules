@@ -1,0 +1,1 @@
+SUBSYSTEMS=="usb", DRIVERS=="ch341", ATTRS{bInterfaceClass}=="ff", SYMLINK+="usb_can_analyzer"
