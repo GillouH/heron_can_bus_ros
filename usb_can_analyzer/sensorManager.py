@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
+
 from threading import Thread
 from typing import Union, Tuple
 
@@ -9,7 +10,7 @@ from usb_can_analyzer.converter import Converter
 
 
 class SensorManager(Thread):
-    def __init__(self, converter : Tuple[str, int, int], IRSensors : Union[int] = [], IRUSSensors : Union[int] = []):
+    def __init__(self, converter: Tuple[str, int, int], IRSensors: Union[int] = [], IRUSSensors: Union[int] = []):
         Thread.__init__(self)
         self.converter = Converter(*converter)
         self.sensors = {}
@@ -18,18 +19,24 @@ class SensorManager(Thread):
         for ID in IRUSSensors:
             self.sensors[ID] = IRUSSensor(ID)
 
-    def sendMessage(self, msgType: int, serviceID: int, nodeID : int, payload : str):
+    def sendMessage(self, msgType: int, serviceID: int, nodeID: int, payload: str):
         self.converter.sendMessage(msgType, serviceID, nodeID, payload)
 
     def run(self):
-        while True:
-            msgType, serviceID, nodeID, msgPayload = self.converter.readMessage()
-            self.sensors[nodeID].manageMsg(msgType, serviceID, msgPayload)
+        self.reading = True
+        while self.reading:
+            infoMsg = self.converter.readMessage()
+            if infoMsg == -1: continue
+            infoMsg = list(infoMsg)
+            self.sensors[infoMsg.pop(2)].manageMsg(*infoMsg)
+
+    def stop(self):
+        self.reading = False
 
 
 if __name__ == "__main__":
     try:
-        sensorManager = SensorManager(("COM7",), [0, 1, 2, 44, 45], [3, 43])
+        sensorManager = SensorManager(("/dev/usb_can_analyzer",), [0, 1, 2, 44, 45], [3, 43])
         sensorManager.start()
         payload = 0x00
         while True :
@@ -38,8 +45,8 @@ if __name__ == "__main__":
                 payload += 1
             else:
                 payload = 0x00
-            #time.sleep(1)	#pause nécessaire pour la carte arduino ISEN, sinon elle peut ne plus fonctionner correctement + faire 'import time' pour utiliser cette méthode
+            input()
     except KeyboardInterrupt:
         pass
     finally:
-        pass
+        sensorManager.stop()
