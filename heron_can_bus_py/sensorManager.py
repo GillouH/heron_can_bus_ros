@@ -5,8 +5,9 @@
 from threading import Thread
 from typing import Union, Tuple
 
-from usb_can_analyzer.sensors import IRSensor, IRUSSensor
-from usb_can_analyzer.converter import Converter
+from usb_can_analyzer import Converter
+
+from heron_can_bus_py.sensors import IRSensor, IRUSSensor
 
 
 class SensorManager(Thread):

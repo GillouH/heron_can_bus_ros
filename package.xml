@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>usb_can_analyzer_ros</name>
+  <name>heron_can_bus_ros</name>
   <version>0.0.0</version>
-  <description>The usb_can_analyzer_ros package</description>
+  <description>The heron_can_bus_ros package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
@@ -18,7 +18,7 @@
   <!-- Url tags are optional, but multiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
   <!-- Example: -->
-       <url type="GitHub">https://github.com/Gillou100/usb_can_analyzer_ros</url> -->
+       <url type="GitHub">https://github.com/yncreahdf-robotics/heron_can_bus_ros</url> -->
 
 
   <!-- Author tags are optional, multiple are allowed, one per tag -->

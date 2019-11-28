@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(usb_can_analyzer_ros)
+project(heron_can_bus_ros)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)

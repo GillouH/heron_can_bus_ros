@@ -2,26 +2,26 @@
 # coding: utf-8
 
 
-from usb_can_analyzer.useful import ImplementError
+#from usb_can_analyzer.useful import ImplementError
 
 
 class Sensor:
     def __init__(self, ID: int):
         self.ID = ID
-    def manageMsg(self, msgType: int, serviceID: int, msgPayload: str):
-        raise ImplementError("Not implemented method")
+#    def manageMsg(self, msgType: int, serviceID: int, msgPayload: str):
+#        raise ImplementError("Not implemented method")
 
 class IRSensor(Sensor):
     def __init__(self, ID: int):
         super().__init__(ID)
-    def manageMsg(self, msgType: int, serviceID: int, msgPayload: str):
-        pass
+#    def manageMsg(self, msgType: int, serviceID: int, msgPayload: str):
+#        pass
 
 class IRUSSensor(Sensor):
     def __init__(self, ID: int):
         super().__init__(ID)
-    def manageMsg(self, msgType: int, serviceID: int, msgPayload: str):
-        pass
+#    def manageMsg(self, msgType: int, serviceID: int, msgPayload: str):
+#        pass
 
 
 if __name__ == "__main__":

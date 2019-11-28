@@ -3,10 +3,10 @@
 
 
 from os import system
-system("python3 -m pip install --user pyserial rospkg")
-system("python3 -m pip install --user --upgrade pyserial rospkg")
+system("python3 -m pip install --user usb_can_analyzer rospkg")
+system("python3 -m pip install --user --upgrade usb_can_analyzer rospkg")
 
-from usb_can_analyzer.sensorManager import SensorManager
+from heron_can_bus_py.sensorManager import SensorManager
 
 
 __all__ = [
