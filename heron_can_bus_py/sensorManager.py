@@ -8,8 +8,8 @@ from time import sleep
 
 from rospy import Publisher, init_node, is_shutdown, ROSInterruptException, get_time
 from std_msgs.msg import String
-from usb_can_analyzer import Converter
 
+from heron_can_bus_py import Converter
 from heron_can_bus_py.sensors import EDUCATSensor, IR_EDUCATSensor, IRUS_EDUCATSensor
 
 
