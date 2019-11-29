@@ -88,8 +88,9 @@ class SensorManager():
             def run(self):
                 self.publishing = True
                 while self.publishing:
-                    for node in self.sensors.values(): print(node.getDistance())
-                    sleep(self.period)
+                    for node in self.sensors.values():
+                        print(str(node.ID) + ":", node.getDistance())
+                    print()
 
             def initROS(self):
                 init_node("IR_IRUS_sensors")
