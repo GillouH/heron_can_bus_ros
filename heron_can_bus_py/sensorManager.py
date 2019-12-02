@@ -23,7 +23,7 @@ class SensorManager():
         for sensor in IRUS_EDUCATSensors:
                 self.sensors[sensor[0]] = IRUS_EDUCATSensor(sensor[0], sensor[1])
         self.readingMessage = self.readMessage(self.converter, self.period, self.sensors)
-        self.runningNode = self.runNode(self.converter, self.period, self.sensors)
+        self.runningNode = self.runNode(self.converter, self.sensors)
         self.publishingROS = self.publishROS(self.converter, self.period, self.sensors)
 
     def startThread(self):
@@ -33,10 +33,9 @@ class SensorManager():
 
 
     class readMessage(Thread):
-        def __init__(self, converter, period, sensors):
+        def __init__(self, converter, sensors):
             Thread.__init__(self)
             self.converter = converter
-            self.period = period
             self.sensors = sensors
 
         def run(self):
@@ -61,7 +60,7 @@ class SensorManager():
             self.initNode()
 
         def initNode(self):
-            period =  format(int(self.period*1000), "x")
+            period =  format(int(self.period*1000), "x")    # Sensor node expected the time to be in ms.
             if (len(period) % 2) != 0 : period = "0" + period
             for nodeID in self.sensors.keys():
                 self.converter.sendMessage(Converter.DATA, EDUCATSensor.compactedMsgID(1, nodeID), period)
