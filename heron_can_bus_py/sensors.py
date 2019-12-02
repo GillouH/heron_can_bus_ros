@@ -60,11 +60,11 @@ class IR_EDUCATSensor(EDUCATSensor):
     def manageMsg(self, msgType: int, serviceID: int, msgPayload: bytes):
         super().manageMsg(msgType, serviceID, msgPayload)
         #if (serviceID == 2):
-        self.distance = [int(msgPayload[0:2].hex(), base=16),
-                        msgPayload[2],
-                        msgPayload[3],
-                        msgPayload[4],
-                        msgPayload[5]
+        self.distance = [int(msgPayload[0:2].hex(), base=16) / 100,
+                        msgPayload[2] / 100,
+                        msgPayload[3] / 100,
+                        msgPayload[4] / 100,
+                        msgPayload[5] / 100
         ]
 
 
@@ -78,11 +78,11 @@ class IRUS_EDUCATSensor(EDUCATSensor):
     def manageMsg(self, msgType: int, serviceID: int, msgPayload: bytes):
         super().manageMsg(msgType, serviceID, msgPayload)
         #if (serviceID == 2):
-        self.distance = [int(msgPayload[0:2].hex(), base=16),
-                        int(msgPayload[2:4].hex(), base=16),
-                        msgPayload[4],
-                        msgPayload[5],
-                        msgPayload[6]
+        self.distance = [int(msgPayload[0:2].hex(), base=16) / 100,
+                        int(msgPayload[2:4].hex(), base=16) / 100,
+                        msgPayload[4] / 100,
+                        msgPayload[5] / 100,
+                        msgPayload[6] / 100
         ]
 
 

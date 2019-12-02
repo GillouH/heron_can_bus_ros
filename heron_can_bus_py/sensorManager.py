@@ -22,8 +22,8 @@ class SensorManager():
                 self.sensors[sensor[0]] = IR_EDUCATSensor(sensor[0], sensor[1])
         for sensor in IRUS_EDUCATSensors:
                 self.sensors[sensor[0]] = IRUS_EDUCATSensor(sensor[0], sensor[1])
-        self.readingMessage = self.readMessage(self.converter, self.period, self.sensors)
-        self.runningNode = self.runNode(self.converter, self.sensors)
+        self.readingMessage = self.readMessage(self.converter, self.sensors)
+        self.runningNode = self.runNode(self.converter, self.period, self.sensors)
         self.publishingROS = self.publishROS(self.converter, self.period, self.sensors)
 
     def startThread(self):
