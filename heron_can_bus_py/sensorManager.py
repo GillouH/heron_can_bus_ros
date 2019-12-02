@@ -61,7 +61,7 @@ class SensorManager():
             self.initNode()
 
         def initNode(self):
-            period =  format(self.period, "x")
+            period =  format(int(self.period*1000), "x")
             if (len(period) % 2) != 0 : period = "0" + period
             for nodeID in self.sensors.keys():
                 self.converter.sendMessage(Converter.DATA, EDUCATSensor.compactedMsgID(1, nodeID), period)
@@ -88,7 +88,9 @@ class SensorManager():
             def run(self):
                 self.publishing = True
                 while self.publishing:
-                    for node in self.sensors.values(): print(node.getDistance())
+                    for node in self.sensors.values():
+                        print(node.ID, ": ", node.getDistance())
+                    print()
                     sleep(self.period)
 
             def initROS(self):
@@ -137,7 +139,7 @@ class SensorManager():
 
 
 if __name__ == "__main__":
-    sensorManager = SensorManager(("/dev/ttyUSB0",), 1, [10, 11, 13, 29, 43, 45], [2, 3])
+    sensorManager = SensorManager(("/dev/ttyUSB0",115200), 0.1, [10, 11, 13, 29, 35], [42, 49])
     sensorManager.startThread()
     try:
         while True: pass
