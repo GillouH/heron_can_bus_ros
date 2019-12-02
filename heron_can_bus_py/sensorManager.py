@@ -14,7 +14,7 @@ from heron_can_bus_py.sensors import EDUCATSensor, IR_EDUCATSensor, IRUS_EDUCATS
 
 
 class SensorManager():
-    def __init__(self, converter: Tuple[str, int, int], period: int = 1, IR_EDUCATSensors: List[Tuple[int, str]] = [], IRUS_EDUCATSensors: List[Tuple[int, str]] = []:
+    def __init__(self, converter: Tuple[str, int, int], period: int = 1, IR_EDUCATSensors: List[Tuple[int, str]] = [], IRUS_EDUCATSensors: List[Tuple[int, str]] = []):
         self.converter = Converter(*converter)
         self.period = period
         self.sensors = {}
@@ -72,7 +72,7 @@ class SensorManager():
             while self.running:
                 for nodeID in self.sensors.keys():
                     self.converter.sendMessage(Converter.REMOTE, EDUCATSensor.compactedMsgID(2, nodeID))
-                sleep(self.period)
+                    sleep(self.period)
 
         def stop(self):
             self.running = False
@@ -84,6 +84,7 @@ class SensorManager():
                 self.converter = converter
                 self.period = period
                 self.sensors = sensors
+                self.initROS()
 
             def run(self):
                 seq = 0
@@ -98,21 +99,25 @@ class SensorManager():
                 self.publisher = Publisher("ir_irus", CANSensors, queue_size=10)
 
             def publish(self, seq: int):
-                msg = CANSensors()
-                for node in self.sensors.values():
-                    distances = node.getDistance()
-                    for i in range(distances):
-                        getattr(msg, node.position)[i].radiation_type = node.RADIATION_TYPES[i]
-                        getattr(msg, node.position)[i].field_of_view = node.FIELD_OF_VIEW[i]
-                        getattr(msg, node.position)[i].min_range = node.MIN_RANGE[i]
-                        getattr(msg, node.position)[i].max_range = node.MAX_RANGE[i]
-                        getattr(msg, node.position)[i].range = distances[i]
-                        getattr(msg, node.position)[i].header.seq = seq
-                        getattr(msg, node.position)[i].header.stamp.secs = int(time)
-                        getattr(msg, node.position)[i].header.stamp.nsecs = (time - getattr(msg, node.position)[i].header.stamp.secs) * 10**9
-                        getattr(msg, node.position)[i].header.frame_id = "?"
-                    print(str(node.ID) + ":", node.getDistance())
-                self.publisher.publish(msg)
+                try:
+                    msg = CANSensors()
+                    for node in self.sensors.values():
+                        distances = node.getDistance()
+                        for i in range(len(distances)):
+                            getattr(msg, node.position)[i].radiation_type = node.RADIATION_TYPES[i]
+                            getattr(msg, node.position)[i].field_of_view = node.FIELD_OF_VIEW[i]
+                            getattr(msg, node.position)[i].min_range = node.MIN_RANGE[i]
+                            getattr(msg, node.position)[i].max_range = node.MAX_RANGE[i]
+                            getattr(msg, node.position)[i].range = distances[i]
+                            getattr(msg, node.position)[i].header.seq = seq
+                            getattr(msg, node.position)[i].header.stamp.secs = int(time())
+                            getattr(msg, node.position)[i].header.stamp.nsecs = int((time() - getattr(msg, node.position)[i].header.stamp.secs) * 10**9)
+                            getattr(msg, node.position)[i].header.frame_id = node.FRAME_ID[i]
+                        print(str(node.ID) + ":", node.getDistance())
+                    self.publisher.publish(msg)
+                    sleep(self.period)
+                except ROSInterruptException:
+                    pass
 
             def stop(self):
                 self.publishing = False
@@ -130,7 +135,7 @@ class SensorManager():
 
 
 if __name__ == "__main__":
-    sensorManager = SensorManager(("/dev/ttyUSB0",), 1, [(10, "ir_front_left"), (11, "ir_back_right")])
+    sensorManager = SensorManager(("/dev/ttyUSB0", 115200), 1, [(10, "ir_front_left"), (11, "ir_back_right")])
     sensorManager.startThread()
     try:
         while True: pass

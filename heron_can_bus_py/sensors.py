@@ -16,12 +16,14 @@ class EDUCATSensor(metaclass=ABCMeta):
             "FIELD_OF_VIEW": (27 * pi) / 180,
             "MIN_RANGE": 0.05,
             "MAX_RANGE": 1.5,
+            "FRAME_ID": "IR"
         },
         "US": {
             "RADIATION_TYPE": ULTRASOUND,
             "FIELD_OF_VIEW": (120 * pi) / 180,
             "MIN_RANGE": 0.5,
             "MAX_RANGE": 3,
+            "FRAME_ID": "US"
         }
     }
 
@@ -53,6 +55,7 @@ class IR_EDUCATSensor(EDUCATSensor):
     FIELD_OF_VIEW = [EDUCATSensor.SENSORS["IR"]["FIELD_OF_VIEW"]] * 5
     MIN_RANGE = [EDUCATSensor.SENSORS["IR"]["MIN_RANGE"]] * 5
     MAX_RANGE = [EDUCATSensor.SENSORS["IR"]["MAX_RANGE"]] * 5
+    FRAME_ID = [EDUCATSensor.SENSORS["IR"]["FRAME_ID"]] * 5
 
     def manageMsg(self, msgType: int, serviceID: int, msgPayload: bytes):
         super().manageMsg(msgType, serviceID, msgPayload)
@@ -70,6 +73,7 @@ class IRUS_EDUCATSensor(EDUCATSensor):
     FIELD_OF_VIEW = [None] + [EDUCATSensor.SENSORS["US"]["FIELD_OF_VIEW"]] + [EDUCATSensor.SENSORS["IR"]["FIELD_OF_VIEW"]] * 3
     MIN_RANGE = [min(EDUCATSensor.SENSORS["US"]["MIN_RANGE"], EDUCATSensor.SENSORS["IR"]["MIN_RANGE"])] + [EDUCATSensor.SENSORS["US"]["MIN_RANGE"]] + [EDUCATSensor.SENSORS["IR"]["MIN_RANGE"]] * 3
     MAX_RANGE = [max(EDUCATSensor.SENSORS["US"]["MAX_RANGE"], EDUCATSensor.SENSORS["IR"]["MAX_RANGE"])] + [EDUCATSensor.SENSORS["US"]["MAX_RANGE"]] + [EDUCATSensor.SENSORS["IR"]["MAX_RANGE"]] * 3
+    FRAME_ID = ["IR_US"] + [EDUCATSensor.SENSORS["US"]["FRAME_ID"]] + [EDUCATSensor.SENSORS["IR"]["FRAME_ID"]] * 3
 
     def manageMsg(self, msgType: int, serviceID: int, msgPayload: bytes):
         super().manageMsg(msgType, serviceID, msgPayload)
