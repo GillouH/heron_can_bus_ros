@@ -61,7 +61,7 @@ class SensorManager():
             self.initNode()
 
         def initNode(self):
-            period =  format(self.period, "x")
+            period = format(int(self.period * 1000), "x")
             if (len(period) % 2) != 0 : period = "0" + period
             for nodeID in self.sensors.keys():
                 self.converter.sendMessage(Converter.DATA, EDUCATSensor.compactedMsgID(1, nodeID), period)
