@@ -111,11 +111,11 @@ class SensorManager():
                         getattr(msg, node.position)[i].header.seq = seq
                         getattr(msg, node.position)[i].header.stamp.secs = int(time())
                         getattr(msg, node.position)[i].header.stamp.nsecs = int((time() - getattr(msg, node.position)[i].header.stamp.secs) * 10**9)
-#                        getattr(msg, node.position)[i].header.frame_id = node.FRAME_ID[i]
+                        #getattr(msg, node.position)[i].header.frame_id = node.FRAME_ID[i]
                         getattr(msg, node.position)[i].header.frame_id = node.position
                     print(str(node.ID) + ":", node.getDistance())
                 self.publisher.publish(msg)
-                sleep(self.period)
+                #sleep(self.period)
 
             def stop(self):
                 self.publishing = False
@@ -136,9 +136,10 @@ if __name__ == "__main__":
     sensorManager = SensorManager(
         ("/dev/ttyUSB0", 115200),
         0.1,
-#        [(10, "ir_front_left"), (13, "ir_front_right"), (29, "ir_back_left"), (11, "ir_back_right"), (100, "ir_back")],
-#        [(200, "ir_us_left"), (201, "ir_us_right")]
-        [(10, "ir_front_left"), (11, "ir_back_right")]
+        [
+            (10, "ir_front_left"), (13, "ir_front_right"),
+            (13, "ir_back_left"), (29, "ir_back_right")
+        ]
     )
     sensorManager.startThread()
     try:
