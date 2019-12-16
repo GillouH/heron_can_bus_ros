@@ -6,6 +6,7 @@ from threading import Thread
 from typing import Union, Tuple, List
 from time import sleep, time
 
+import rospy
 from rospy import Publisher, init_node, is_shutdown, ROSInterruptException, get_time
 
 from heron_can_bus_ros.msg import CANSensors
@@ -30,6 +31,7 @@ class SensorManager():
         self.readingMessage.start()
         self.runningNode.start()
         self.publishingROS.start()
+        self.publishingROS.join()
 
 
     class readMessage(Thread):
@@ -86,17 +88,16 @@ class SensorManager():
                 self.sensors = sensors
                 self.initROS()
 
-            def run(self):
-                seq = 0
-                self.publishing = True
-                while self.publishing:
-                    self.publish(seq)
-                    seq += 1
-                    print()
-
             def initROS(self):
                 init_node("IR_IRUS_sensors")
                 self.publisher = Publisher("ir_irus", CANSensors, queue_size=10)
+
+            def run(self):
+                seq = 0
+                while not is_shutdown():
+                    self.publish(seq)
+                    seq += 1
+                    print()
 
             def publish(self, seq: int):
                 msg = CANSensors()
@@ -117,13 +118,9 @@ class SensorManager():
                 self.publisher.publish(msg)
                 sleep(self.period)
 
-            def stop(self):
-                self.publishing = False
-
     def stopThread(self):
-        self.readingMessage.stop()
         self.runningNode.stop()
-        self.publishingROS.stop()
+        self.readingMessage.stop()
 
     def __del__(self):
         del self.readingMessage
@@ -143,9 +140,8 @@ if __name__ == "__main__":
             (21, "ir_us_left"), (22, "ir_us_right")
         ]
     )
-    sensorManager.startThread()
     try:
-        while True: pass
+        sensorManager.startThread()
     except KeyboardInterrupt:
         pass
     finally:
