@@ -91,6 +91,8 @@ class SensorManager():
                 while not is_shutdown():
                     self.publish()
                     print()
+                del self.msg
+                del self.publisher
 
             def publish(self):
                 for node in self.sensors.values():
@@ -99,7 +101,7 @@ class SensorManager():
                     for i in range(len(distances)):
                         self.msg.header.stamp.secs = int(time())
                         self.msg.header.stamp.nsecs = int((time() - self.msg.header.stamp.secs) * 10**9)
-                        self.msg.header.frame_id = node.position + " " + node.FRAME_ID[i]
+                        self.msg.header.frame_id = node.name + " " + node.FRAME_ID[i]
                         self.msg.radiation_type = node.RADIATION_TYPES[i]
                         self.msg.field_of_view = node.FIELD_OF_VIEW[i]
                         self.msg.min_range = node.MIN_RANGE[i]
@@ -113,9 +115,11 @@ class SensorManager():
         self.readingMessage.stop()
 
     def __del__(self):
-        del self.readingMessage
-        del self.runningNode
         del self.publishingROS
+        del self.runningNode
+        del self.readingMessage
+        for sensor in self.sensors.values():
+            del sensor
         del self.converter
 
 

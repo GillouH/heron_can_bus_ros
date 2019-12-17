@@ -42,10 +42,10 @@ class EDUCATSensor(metaclass=ABCMeta):
         nodeID = msgID - (serviceID << 6)
         return serviceID, nodeID
 
-    def __init__(self, ID: int, position: str):
+    def __init__(self, ID: int, name: str):
         self.ID = ID
+        self.name = name
         self.distance = []
-        self.position = position
 
     @abstractmethod
     def manageMsg(self, msgType: int, serviceID: int, msgPayload: bytes):
