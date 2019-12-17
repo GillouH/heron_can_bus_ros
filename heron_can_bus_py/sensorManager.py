@@ -81,22 +81,22 @@ class SensorManager():
 
             def initROS(self):
                 init_node("IR_IRUS_sensors")
-                self.publisher = Publisher("ir_irus", Range, queue_size=10)
+                nb_pub = 0
+                for sensor in self.sensors.values():
+                    if sensor.FRAME_ID != None: nb_pub += len(sensor.FRAME_ID)
+                self.publisher = Publisher("ir_irus", Range, queue_size=nb_pub)
                 self.msg = Range()
 
             def run(self):
-                seq = 0
                 while not is_shutdown():
-                    self.publish(seq)
-                    seq += 1
+                    self.publish()
                     print()
 
-            def publish(self, seq: int):
+            def publish(self):
                 for node in self.sensors.values():
                     distances = node.getDistance()
                     print(str(node.ID) + ":", distances)
                     for i in range(len(distances)):
-                        self.msg.header.seq = seq
                         self.msg.header.stamp.secs = int(time())
                         self.msg.header.stamp.nsecs = int((time() - self.msg.header.stamp.secs) * 10**9)
                         self.msg.header.frame_id = node.position + " " + node.FRAME_ID[i]

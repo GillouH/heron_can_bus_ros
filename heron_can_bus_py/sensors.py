@@ -7,23 +7,28 @@ from typing import Tuple
 from math import pi
 
 
+from heron_can_bus_py import Converter
+
+
 class EDUCATSensor(metaclass=ABCMeta):
-    ULTRASOUND = 0
-    INFRARED = 1
+    FRAME_ID = None
+    RADIATION_TYPES = None
+    FIELD_OF_VIEW = None
+    MIN_RANGE = None
+    MAX_RANGE = None
+
     SENSORS = {
         "IR": {
-            "RADIATION_TYPE": INFRARED,
+            "RADIATION_TYPE": 1,
             "FIELD_OF_VIEW": (27 * pi) / 180,
             "MIN_RANGE": 0.05,
             "MAX_RANGE": 1.5
-            #"FRAME_ID": "IR"
         },
         "US": {
-            "RADIATION_TYPE": ULTRASOUND,
+            "RADIATION_TYPE": 0,
             "FIELD_OF_VIEW": (120 * pi) / 180,
             "MIN_RANGE": 0.5,
             "MAX_RANGE": 3
-            #"FRAME_ID": "US"
         }
     }
 
@@ -47,8 +52,11 @@ class EDUCATSensor(metaclass=ABCMeta):
         pass
 
     def correctDistance(self):
-        for i in range(len(self.distance)):
+        self.distance[0] = -1
+        for i in range(1, len(self.distance)):
             if self.distance[i] == 0:  self.distance[i] = -1
+            elif self.distance[i] < self.MIN_RANGE[i]: self.distance[i] = self.MIN_RANGE[i]
+            elif self.distance[i] > self.MAX_RANGE[i]: self.distance[i] = self.MAX_RANGE[i]
             if self.distance[i] != -1 and (self.distance[0] > self.distance[i] or self.distance[0] == -1):  self.distance[0] = self.distance[i]
 
     def getDistance(self):
@@ -64,14 +72,15 @@ class IR_EDUCATSensor(EDUCATSensor):
 
     def manageMsg(self, msgType: int, serviceID: int, msgPayload: bytes):
         super().manageMsg(msgType, serviceID, msgPayload)
-        if (serviceID == 2):
-            self.distance = [int(msgPayload[0:2].hex(), base=16),
-                            msgPayload[2],
-                            msgPayload[4],  # Capteurs 2 et 3 inversés dans les nodes
-                            msgPayload[3],  # Capteurs 2 et 3 inversés dans les nodes
-                            msgPayload[5]
-            ]
-            super().correctDistance()
+        if msgType == Converter.DATA:
+            if serviceID == 2 and len(msgPayload) == 6:
+                self.distance = [int(msgPayload[0:2].hex(), base=16)/100,
+                                msgPayload[2]/100,
+                                msgPayload[4]/100,  # Les 2 capteurs au centre inversés dans les nodes
+                                msgPayload[3]/100,  # Les 2 capteurs au centre inversés dans les nodes
+                                msgPayload[5]/100
+                ]
+                super().correctDistance()
 
 
 
@@ -84,15 +93,16 @@ class IRUS_EDUCATSensor(EDUCATSensor):
 
     def manageMsg(self, msgType: int, serviceID: int, msgPayload: bytes):
         super().manageMsg(msgType, serviceID, msgPayload)
-        if (serviceID == 2):
-            self.distance = [int(msgPayload[0:2].hex(), base=16),
-                            int(msgPayload[2:4].hex(), base=16),
-                            msgPayload[4],
-                            msgPayload[5],
-                            msgPayload[6]
-            ]
-            super().correctDistance()
-            self.updateInfosNode()
+        if msgType == Converter.DATA:
+            if serviceID == 2 and len(msgPayload) == 6:
+                self.distance = [int(msgPayload[0:2].hex(), base=16)/100,
+                                int(msgPayload[2:4].hex(), base=16)/100,
+                                msgPayload[4]/100,
+                                msgPayload[5]/100,
+                                msgPayload[6]/100
+                ]
+                super().correctDistance()
+                self.updateInfosNode()
 
     def updateInfosNode(self):
         if (self.distance[0] == self.distance[1]):
@@ -109,7 +119,8 @@ class IRUS_EDUCATSensor(EDUCATSensor):
 
 if __name__ == "__main__":
     try:
-        pass
+        IR = IR_EDUCATSensor(11, "test")
+        IR.manageMsg(0, 2, b'\x00\x56\x00\x23\xB3\xF5')
     except KeyboardInterrupt:
         pass
     finally:
