@@ -6,10 +6,9 @@ from threading import Thread
 from typing import Union, Tuple, List
 from time import sleep, time
 
-import rospy
 from rospy import Publisher, init_node, is_shutdown, ROSInterruptException, get_time
 
-from heron_can_bus_ros.msg import CANSensors
+from sensor_msgs.msg import Range
 from heron_can_bus_py import Converter
 from heron_can_bus_py.sensors import EDUCATSensor, IR_EDUCATSensor, IRUS_EDUCATSensor
 
@@ -82,7 +81,8 @@ class SensorManager():
 
             def initROS(self):
                 init_node("IR_IRUS_sensors")
-                self.publisher = Publisher("ir_irus", CANSensors, queue_size=10)
+                self.publisher = Publisher("ir_irus", Range, queue_size=10)
+                self.msg = Range()
 
             def run(self):
                 seq = 0
@@ -92,22 +92,20 @@ class SensorManager():
                     print()
 
             def publish(self, seq: int):
-                msg = CANSensors()
                 for node in self.sensors.values():
                     distances = node.getDistance()
+                    print(str(node.ID) + ":", distances)
                     for i in range(len(distances)):
-                        getattr(msg, node.position)[i].radiation_type = node.RADIATION_TYPES[i]
-                        getattr(msg, node.position)[i].field_of_view = node.FIELD_OF_VIEW[i]
-                        getattr(msg, node.position)[i].min_range = node.MIN_RANGE[i]
-                        getattr(msg, node.position)[i].max_range = node.MAX_RANGE[i]
-                        getattr(msg, node.position)[i].range = distances[i]
-                        getattr(msg, node.position)[i].header.seq = seq
-                        getattr(msg, node.position)[i].header.stamp.secs = int(time())
-                        getattr(msg, node.position)[i].header.stamp.nsecs = int((time() - getattr(msg, node.position)[i].header.stamp.secs) * 10**9)
-                        #getattr(msg, node.position)[i].header.frame_id = node.FRAME_ID[i]
-                        getattr(msg, node.position)[i].header.frame_id = node.position
-                    print(str(node.ID) + ":", node.getDistance())
-                self.publisher.publish(msg)
+                        self.msg.header.seq = seq
+                        self.msg.header.stamp.secs = int(time())
+                        self.msg.header.stamp.nsecs = int((time() - self.msg.header.stamp.secs) * 10**9)
+                        self.msg.header.frame_id = node.position + " " + node.FRAME_ID[i]
+                        self.msg.radiation_type = node.RADIATION_TYPES[i]
+                        self.msg.field_of_view = node.FIELD_OF_VIEW[i]
+                        self.msg.min_range = node.MIN_RANGE[i]
+                        self.msg.max_range = node.MAX_RANGE[i]
+                        self.msg.range = distances[i]
+                        self.publisher.publish(self.msg)
                 sleep(self.period)
 
     def stopThread(self):
@@ -132,10 +130,6 @@ if __name__ == "__main__":
             (21, "ir_us_left"), (22, "ir_us_right")
         ]
     )
-    try:
-        sensorManager.startThread()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        sensorManager.stopThread()
-        del sensorManager
+    sensorManager.startThread()
+    sensorManager.stopThread()
+    del sensorManager
