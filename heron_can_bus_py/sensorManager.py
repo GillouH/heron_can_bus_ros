@@ -6,7 +6,7 @@ from threading import Thread
 from typing import Union, Tuple, List
 from time import sleep, time
 
-from rospy import Publisher, init_node, is_shutdown, ROSInterruptException, get_time
+from rospy import Publisher, init_node, is_shutdown, ROSException, get_time
 
 from sensor_msgs.msg import Range
 from heron_can_bus_py import Converter
@@ -26,11 +26,13 @@ class SensorManager():
         self.runningNode = self.runNode(self.converter, self.period, self.sensors)
         self.publishingROS = self.publishROS(self.converter, self.period, self.sensors)
 
-    def startThread(self):
+    def launchThreads(self):
         self.readingMessage.start()
         self.runningNode.start()
         self.publishingROS.start()
         self.publishingROS.join()
+        self.runningNode.stop()
+        self.readingMessage.stop()
 
 
     class readMessage(Thread):
@@ -90,8 +92,6 @@ class SensorManager():
                 while not is_shutdown():
                     self.publish()
                     print()
-                del self.msg
-                del self.publisher
 
             def publish(self):
                 for node in self.sensors.values():
@@ -106,12 +106,16 @@ class SensorManager():
                         self.msg.min_range = node.MIN_RANGE[i]
                         self.msg.max_range = node.MAX_RANGE[i]
                         self.msg.range = distances[i]
-                        self.publisher.publish(self.msg)
+                        try :
+                            self.publisher.publish(self.msg)
+                        except ROSException as e :
+                            if not is_shutdown(): print(e)  #Afficher l'erreur si non dû à la fermeture du topic
                 sleep(self.period)
 
-    def stopThread(self):
-        self.runningNode.stop()
-        self.readingMessage.stop()
+            def __del__(self):
+                del self.msg
+                del self.publisher
+
 
     def __del__(self):
         del self.publishingROS
@@ -125,7 +129,7 @@ class SensorManager():
 if __name__ == "__main__":
     sensorManager = SensorManager(
         ("/dev/ttyUSB0", 115200),
-        0.1,
+        0.001,
         [
             (11, "ir_front_left"), (12, "ir_front_right"),
             (13, "ir_back_left"), (14, "ir_back_right"),
@@ -133,6 +137,5 @@ if __name__ == "__main__":
             (21, "ir_us_left"), (22, "ir_us_right")
         ]
     )
-    sensorManager.startThread()
-    sensorManager.stopThread()
+    sensorManager.launchThreads()
     del sensorManager
