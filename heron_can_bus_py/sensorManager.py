@@ -109,10 +109,14 @@ class SensorManager():
                         try :
                             self.publisher.publish(self.msg)
                         except ROSException as e :
+<<<<<<< HEAD
                             if not is_shutdown(): print(e)
                             # /!\ is_shutdown() reste à False un certain temps entre le début d'arrêt de la node
                             #     (et l'arrêt du topic associé si aucune autre node le maintient)
                             #     et l'arrêt définitif de la node
+=======
+                            if not is_shutdown(): print(e)  #Afficher l'erreur si non dû à la fermeture du topic
+>>>>>>> 84fe21907b04850964cf9a3c46866b588a6bdd15
                 sleep(self.period)
 
             def __del__(self):
