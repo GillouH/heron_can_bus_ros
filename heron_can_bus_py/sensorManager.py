@@ -6,7 +6,7 @@ from threading import Thread
 from typing import Union, Tuple, List
 from time import sleep, time
 
-from rospy import Publisher, init_node, is_shutdown, ROSException, get_time
+from rospy import Publisher, init_node, on_shutdown, ROSException, get_time
 
 from sensor_msgs.msg import Range
 from heron_can_bus_py import Converter
@@ -82,6 +82,7 @@ class SensorManager():
 
             def initROS(self):
                 init_node("IR_IRUS_sensors")
+                on_shutdown(self.stop)
                 nb_pub = 0
                 for sensor in self.sensors.values():
                     if sensor.FRAME_ID != None: nb_pub += len(sensor.FRAME_ID)
@@ -89,7 +90,8 @@ class SensorManager():
                 self.msg = Range()
 
             def run(self):
-                while not is_shutdown():
+                self.publishing = True
+                while self.publishing:
                     self.publish()
                     print()
 
@@ -109,15 +111,11 @@ class SensorManager():
                         try :
                             self.publisher.publish(self.msg)
                         except ROSException as e :
-<<<<<<< HEAD
-                            if not is_shutdown(): print(e)
-                            # /!\ is_shutdown() reste à False un certain temps entre le début d'arrêt de la node
-                            #     (et l'arrêt du topic associé si aucune autre node le maintient)
-                            #     et l'arrêt définitif de la node
-=======
-                            if not is_shutdown(): print(e)  #Afficher l'erreur si non dû à la fermeture du topic
->>>>>>> 84fe21907b04850964cf9a3c46866b588a6bdd15
+                            if self.publishing: print(e)    # Afficher l'erreur si non dû à l'arrêt de la node
                 sleep(self.period)
+
+            def stop(self):
+                self.publishing = False
 
             def __del__(self):
                 del self.msg
@@ -136,7 +134,7 @@ class SensorManager():
 if __name__ == "__main__":
     sensorManager = SensorManager(
         ("/dev/ttyUSB0", 115200),
-        0.001,
+        0.01,
         [
             (11, "ir_front_left"), (12, "ir_front_right"),
             (13, "ir_back_left"), (14, "ir_back_right"),
