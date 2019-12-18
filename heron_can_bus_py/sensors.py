@@ -105,22 +105,16 @@ class IRUS_EDUCATSensor(EDUCATSensor):
                 self.updateInfosNode()
 
     def updateInfosNode(self):
-        if (self.distance[0] == self.distance[1]):
-            self.RADIATION_TYPES[0] = EDUCATSensor.SENSORS["US"]["RADIATION_TYPE"]
-            self.FIELD_OF_VIEW[0] = EDUCATSensor.SENSORS["US"]["FIELD_OF_VIEW"]
-            self.MIN_RANGE[0] = EDUCATSensor.SENSORS["US"]["MIN_RANGE"]
-            self.MAX_RANGE[0] = EDUCATSensor.SENSORS["US"]["MAX_RANGE"]
-        elif (self.distance[0] in self.distance[2:5]):
-            self.RADIATION_TYPES[0] = EDUCATSensor.SENSORS["IR"]["RADIATION_TYPE"]
-            self.FIELD_OF_VIEW[0] = EDUCATSensor.SENSORS["IR"]["FIELD_OF_VIEW"]
-            self.MIN_RANGE[0] = EDUCATSensor.SENSORS["IR"]["MIN_RANGE"]
-            self.MAX_RANGE[0] = EDUCATSensor.SENSORS["IR"]["MAX_RANGE"]
+        sensorType = "US" if self.distance[0] == self.distance[1] else "IR"
+        self.RADIATION_TYPES[0] = EDUCATSensor.SENSORS[sensorType]["RADIATION_TYPE"]
+        self.FIELD_OF_VIEW[0] = EDUCATSensor.SENSORS[sensorType]["FIELD_OF_VIEW"]
+        self.MIN_RANGE[0] = EDUCATSensor.SENSORS[sensorType]["MIN_RANGE"]
+        self.MAX_RANGE[0] = EDUCATSensor.SENSORS[sensorType]["MAX_RANGE"]
 
 
 if __name__ == "__main__":
     try:
-        IR = IR_EDUCATSensor(11, "test")
-        IR.manageMsg(0, 2, b'\x00\x56\x00\x23\xB3\xF5')
+        pass
     except KeyboardInterrupt:
         pass
     finally:
