@@ -8,7 +8,7 @@ from time import sleep, time
 
 from rospy import Publisher, init_node, is_shutdown, ROSInterruptException, get_time
 
-from heron_can_bus_ros.msg import CANSensors
+from sensor_msgs.msg import Range
 from heron_can_bus_py import Converter
 from heron_can_bus_py.sensors import EDUCATSensor, IR_EDUCATSensor, IRUS_EDUCATSensor
 
@@ -30,6 +30,7 @@ class SensorManager():
         self.readingMessage.start()
         self.runningNode.start()
         self.publishingROS.start()
+        self.publishingROS.join()
 
 
     class readMessage(Thread):
@@ -42,7 +43,7 @@ class SensorManager():
             self.reading = True
             while self.reading:
                 infoMsg = self.converter.readMessage()
-                if infoMsg == -1: continue
+                if type(infoMsg) == int: continue
                 msgType, msgID, payload = infoMsg
                 serviceID, nodeID = EDUCATSensor.decompactedMsgID(msgID)
                 if nodeID in self.sensors.keys(): self.sensors[nodeID].manageMsg(msgType, serviceID, payload)
@@ -57,14 +58,6 @@ class SensorManager():
             self.converter = converter
             self.period = period
             self.sensors = sensors
-            self.initNode()
-
-        def initNode(self):
-            period =  format(int(self.period*1000), "x")    # Sensor node expected the time to be in ms.
-            if (len(period) % 2) != 0 : period = "0" + period
-            for nodeID in self.sensors.keys():
-                self.converter.sendMessage(Converter.DATA, EDUCATSensor.compactedMsgID(1, nodeID), period)
-
 
         def run(self):
             self.running = True
@@ -85,51 +78,47 @@ class SensorManager():
                 self.sensors = sensors
                 self.initROS()
 
-            def run(self):
-                seq = 0
-                self.publishing = True
-                while self.publishing:
-                    self.publish(seq)
-                    seq += 1
-                    print()
-
             def initROS(self):
                 init_node("IR_IRUS_sensors")
-                self.publisher = Publisher("ir_irus", CANSensors, queue_size=10)
+                nb_pub = 0
+                for sensor in self.sensors.values():
+                    if sensor.FRAME_ID != None: nb_pub += len(sensor.FRAME_ID)
+                self.publisher = Publisher("ir_irus", Range, queue_size=nb_pub)
+                self.msg = Range()
 
-            def publish(self, seq: int):
-                try:
-                    msg = CANSensors()
-                    for node in self.sensors.values():
-                        distances = node.getDistance()
-                        for i in range(len(distances)):
-                            getattr(msg, node.position)[i].radiation_type = node.RADIATION_TYPES[i]
-                            getattr(msg, node.position)[i].field_of_view = node.FIELD_OF_VIEW[i]
-                            getattr(msg, node.position)[i].min_range = node.MIN_RANGE[i]
-                            getattr(msg, node.position)[i].max_range = node.MAX_RANGE[i]
-                            getattr(msg, node.position)[i].range = distances[i]
-                            getattr(msg, node.position)[i].header.seq = seq
-                            getattr(msg, node.position)[i].header.stamp.secs = int(time())
-                            getattr(msg, node.position)[i].header.stamp.nsecs = int((time() - getattr(msg, node.position)[i].header.stamp.secs) * 10**9)
-                            getattr(msg, node.position)[i].header.frame_id = node.FRAME_ID[i]
-                        print(str(node.ID) + ":", node.getDistance())
-                    self.publisher.publish(msg)
-                    sleep(self.period)
-                except ROSInterruptException:
-                    pass
+            def run(self):
+                while not is_shutdown():
+                    self.publish()
+                    print()
+                del self.msg
+                del self.publisher
 
-            def stop(self):
-                self.publishing = False
+            def publish(self):
+                for node in self.sensors.values():
+                    distances = node.getDistance()
+                    print(str(node.ID) + ":", distances)
+                    for i in range(len(distances)):
+                        self.msg.header.stamp.secs = int(time())
+                        self.msg.header.stamp.nsecs = int((time() - self.msg.header.stamp.secs) * 10**9)
+                        self.msg.header.frame_id = node.name + " " + node.FRAME_ID[i]
+                        self.msg.radiation_type = node.RADIATION_TYPES[i]
+                        self.msg.field_of_view = node.FIELD_OF_VIEW[i]
+                        self.msg.min_range = node.MIN_RANGE[i]
+                        self.msg.max_range = node.MAX_RANGE[i]
+                        self.msg.range = distances[i]
+                        self.publisher.publish(self.msg)
+                sleep(self.period)
 
     def stopThread(self):
-        self.readingMessage.stop()
         self.runningNode.stop()
-        self.publishingROS.stop()
+        self.readingMessage.stop()
 
     def __del__(self):
-        del self.readingMessage
-        del self.runningNode
         del self.publishingROS
+        del self.runningNode
+        del self.readingMessage
+        for sensor in self.sensors.values():
+            del sensor
         del self.converter
 
 
@@ -137,14 +126,13 @@ if __name__ == "__main__":
     sensorManager = SensorManager(
         ("/dev/ttyUSB0", 115200),
         0.1,
-        [(10, "ir_front_left"), (13, "ir_front_right"), (29, "ir_back_left"), (11, "ir_back_right"), (100, "ir_back")],
-        [(200, "ir_us_left"), (201, "ir_us_right")]
+        [
+            (11, "ir_front_left"), (12, "ir_front_right"),
+            (13, "ir_back_left"), (14, "ir_back_right"),
+            (15, "ir_back"),
+            (21, "ir_us_left"), (22, "ir_us_right")
+        ]
     )
     sensorManager.startThread()
-    try:
-        while True: pass
-    except KeyboardInterrupt:
-        pass
-    finally:
-        sensorManager.stopThread()
-        del sensorManager
+    sensorManager.stopThread()
+    del sensorManager
