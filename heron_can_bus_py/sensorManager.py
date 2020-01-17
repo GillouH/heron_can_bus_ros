@@ -6,7 +6,7 @@ from threading import Thread
 from typing import Union, Tuple, List
 from time import sleep, time
 
-from rospy import Publisher, init_node, signal_shutdown, on_shutdown, ROSException, get_time
+from rospy import Publisher, init_node,  on_shutdown, ROSException, get_time
 
 from sensor_msgs.msg import Range
 from heron_can_bus_py import Converter
@@ -117,15 +117,9 @@ class SensorManager():
             def stop(self):
                 self.publishing = False
 
-            def stopNode(self):
-                signal_shutdown("Stop node")
-
             def __del__(self):
                 del self.msg
                 del self.publisher
-
-    def stop(self):
-        self.publishingROS.stopNode()
 
     def __del__(self):
         del self.publishingROS

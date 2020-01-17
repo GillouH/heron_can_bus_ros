@@ -1,0 +1,8 @@
+<launch>
+  <node name="heron_can_bus_manager" pkg="heron_can_bus_ros" type="can_bus.py" output="screen">
+    <param name="converter" value='("/dev/ttyUSB0", 115200)'/>
+    <param name="period" value='0.01'/>
+    <param name="IR_EDUCATSensors" value='[(11, "ir_front_left"), (12, "ir_front_right"), (13, "ir_back_left"), (14, "ir_back_right"), (15, "ir_back"), (21, "ir_us_left"), (22, "ir_us_right")]'/>
+    <param name="IRUS_EDUCATSensors" value='[]'/>
+  </node>
+</launch>
